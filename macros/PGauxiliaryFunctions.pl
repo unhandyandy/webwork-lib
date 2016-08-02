@@ -240,5 +240,173 @@ sub fact {
 	P($_[0], $_[0]);
 }
 
+## sum list of numbers
+sub sum{
+    my $res = 0;
+    while ( @_ ){
+	$res += shift; }
+    return $res; }
+
+## product of list of numbers
+sub product{
+    my $res = 1;
+    while ( @_ ){
+	$res *= shift; }
+    return $res; }
+
+##flatten an array, given as ref
+sub flatten {
+    my $obj = shift;
+    my @res;
+    if ( ref( $obj ) ){
+	@res =  map { @{&flatten( $_ )} } @$obj; }
+    else {
+	@res = ( $obj ); }
+    return \@res; }
+
+##flatten an array, given as ref
+sub flattenN {
+    my ( $obj, $depth ) = @_;
+    my @res;
+    if ( $depth == 0 || !ref( $obj ) ){
+        @res =  ( $obj ); }
+    else {
+	@res =  map { @{&flattenN( $_, $depth - 1 )} } @$obj; }
+    return \@res; }
+
+## display object as string, array object given as ref
+## object obj, tab depth
+# sub dumper {
+#     my $obj = shift;
+#     my $tab = shift;    
+#     if ( !$tab ){ $tab = 0; }
+#     my @res;
+#     if ( ref( $obj ) ){
+# 	@res =  map { &dumper( $_, $tab + 1 )  } @$obj; 
+# 	@res = ( @res, "$BR" );  }
+#     else {
+# 	my $space = "$SPACE"x$tab;
+# 	@res = ("$space$obj, "); }
+#     return "@res"; }
+
+sub map2 {
+    my $funref = shift;
+    my $mat = shift;
+    my $fun2 = sub {
+	my $list = shift;
+	my @res = map { $funref->( $_ ) } @$list; 
+	return \@res; };
+    my @res = map { $fun2 -> ( $_ ) } @$mat;
+    return \@res; }
+
+sub mapN {
+    my $funref = shift;
+    my $n = shift;
+    my $mat = shift;
+    my @list, $val;
+    if ( $n == 0 ){
+	$val = $funref->( $mat );
+        return $val; }
+    else {
+        @list = map { mapN( $funref, $n - 1, $_) } @$mat;
+        return \@list; } }
+
+sub forEachN {
+    my $funref = shift;
+    my $n = shift;
+    my $mat = shift;
+    my @list, $val;
+    if ( $n == 0 ){
+	$val = $funref->( $mat ); }
+    else {
+        @list = map { mapN( $funref, $n - 1, $_) } @$mat; } }
+
+sub outer {
+    my ( $rows, $cols ) = @_;
+    my @res = ();
+    my $i, $j;
+    for $i ( 0..$#$rows ){
+        for $j ( 0.. $#$cols ){
+            $res[$i][$j] = [ $rows->[$i], $cols->[$j] ]; } }
+    return \@res; }
+
+sub cartesianProduct {
+    my ( $setA, $setB ) = @_;
+    my $outer = &outer( $setA, $setB );
+    return &flattenN( $outer, 2 ); }
+
+sub removeElement{
+    my ( $togo, @list ) = @_;
+    return grep { $_ != $togo } @list; }
+
+sub removeString{
+    my ( $togo, @list ) = @_;
+    return grep { !($_ eq $togo) } @list; }
+
+sub removeNth{
+    my ( $n, @list ) = @_;
+    return @list[ 0..($n - 1), ($n + 1)..$#list ]; }
+
+sub shallowEquals{
+    my ( $la, $lb ) = @_;
+    if ( $#$la != $#$lb ) {
+        return (); }
+    if ( $#$la == -1 ) {
+        return 1; }
+    my @l1 = @$la;
+    my @l2 = @$lb;
+    return pop(@l1) eq pop(@l2) && &shallowEquals( \@l1, \@l2 ); }
+
+sub listHasString{
+    my ( $l, $s ) = @_;
+    my @test = grep { $_ eq $s } @$l;
+    return scalar( @test ) > 0; }
+    
+sub listHas{
+    my ( $l, $s ) = @_;
+    return grep { $_ eq $s } @$l; }
+
+sub roundTo {
+    my ($val,$acc) = @_;
+    my $pow = - round(log($acc)/log(10));
+    my $mult = 10**$pow;
+    return round($val*$mult)/$mult; }
+
+sub ltrim { my $s = shift; $s =~ s/^\s+//;       return $s; }
+sub rtrim { my $s = shift; $s =~ s/\s+$//;       return $s; }
+sub  trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s; }
+
+sub getFactors {
+    my $n = shift;
+    my @factors = ();
+    for my $f(2..$n) {
+        if (not $n % $f) {
+            push @factors, $f; } }
+    return @factors; }
+
+sub makeEq {
+    my ($m,$b) = @_;
+    my ($var,$con);
+    my @mf = $m->value;
+    my ($sgnm1,$sgnb1,$sgnm2,$sgnb2) = ("","","+","+");
+    if ( $m < 0 ) {
+        $mf[0] *= -1;
+        $sgnm1 = $sgnm2 = "-"; }
+    $var = $mf[1]==1 ? ( $mf[0]==1 ? "x" : "$mf[0] x" ) : ( $mf[0]==1 ? "\\frac{x}{$mf[1]}" : "\\frac{$mf[0]}{$mf[1]} x" );
+    if ( $b eq 0 ) {
+        return "y = $var"; }
+    my @bf = $b->value;
+    if ( $b < 0 ) {
+        $bf[0] *= -1;
+        $sgnb1 = $sgnb2 = "-";  }
+    $con = $bf[1]==1 ? "$bf[0]" : "\\frac{$bf[0]}{$bf[1]}";
+    if ( random(0,1) ) {
+        return "y = $sgnm1 $var $sgnb2 $con"; }
+    else {
+        return "y = $sgnb1 $con $sgnm2 $var"; } }
+    
+   
+
 # return 1 so that this file can be included with require
 1
+
