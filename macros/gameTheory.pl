@@ -90,17 +90,28 @@ sub payoffRow {
     return $res;
 }
 
+sub symmetrifyPayoffs {
+    my $arref = shift;
+    my $nr = scalar(@$arref) - 1;
+    my $nc = scalar(@{$arref->[0]}) - 1;
+    my @res = ();
+    for $i(0..$nr) {
+        my @line = ();
+        for $j(0..$nc) {
+            push @line, [$arref->[$i]->[$j],$arref->[$j]->[$i]]; }
+        push @res, \@line; }
+    return \@res; }
+
 sub gameMatrixSymm {
     my $rowname = shift;
     my $colname = shift;
     my $rowstratref = shift;
     my $colstratref = shift;
     my $payoffref = shift;
-    my @payoff = @$payoffref;
-    my @newpayoff = map { &doubleRow( $_ ) } @payoff ;
+    my $newpayoff = symmetrifyPayoffs($payoffref);
     return gameMatrix( $rowname, $colname,
 		       $rowstratref, $colstratref,
-		       \@newpayoff ); }
+		       $newpayoff ); }
 
 sub double {
     my $e = shift;
