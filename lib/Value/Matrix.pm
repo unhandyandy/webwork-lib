@@ -316,16 +316,21 @@ sub transpose {
 #  Get an identity matrix of the requested size
 #
 sub I {
-  my $self = shift; my $d = shift; my $context = shift || $self->context;
-  $d = ($self->dimensions)[0] if !defined $d && ref($self) && $self->isSquare;
-  Value::Error("You must provide a dimension for the Identity matrix") unless defined $d;
-  Value::Error("Dimension must be a positive integer") unless $d =~ m/^[1-9]\d*$/;
-  my @M = (); my @Z = split('',0 x $d);
-  foreach my $i (0..$d-1) {
-    my @row = @Z; $row[$i] = 1;
-    push(@M,$self->make($context,@row));
-  }
-  return $self->make($context,@M);
+    my $self = shift; my $d = shift; my $context = shift || $self->context;
+    $d = ($self->dimensions)[0] if !defined $d && ref($self) && $self->isSquare;
+    Value::Error("You must provide a dimension for the Identity matrix") unless defined $d;
+    Value::Error("Dimension must be a positive integer") unless $d =~ m/^[1-9]\d*$/;
+    my @M = (); my @Z = split('',0 x $d);
+    # foreach my $i (0..$d-1) {
+    #   my @row = @Z; $row[$i] = 1;
+    #   push(@M,$self->make($context,@row));
+    # }
+    my $REAL = $context->Package('Real');
+    foreach my $i (0..$d-1) {
+        my @row = @Z; $row[$i] = 1;
+        push(@M,$self->make($context, map {$REAL->new($_)} @row));
+    }
+    return $self->make($context,@M);
 }
 
 #
